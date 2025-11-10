@@ -19,6 +19,13 @@ const server = http.createServer((req, res) => {
         res.setHeader('Content-Type', 'text/plain');
         res.end('This is the About Page.');
 
+    }else if (req.url === '/json') {
+
+        // JSON Response
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.end('{"message": "This is JSON data"}')
+
     } else {
         // 404 Not Found
         res.statusCode = 404; // <-- Notice the new status code
