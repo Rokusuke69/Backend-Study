@@ -7,6 +7,10 @@ const port = 3000;
 // It *must* be before your route handlers.
 app.use(express.json());
 
+// This is the new line:
+// It serves all files from the 'public' folder.
+app.use(express.static('public'));
+
 // --- Routes ---
 // 1. GET / (Home)
 app.get('/', (ree, res) => {
@@ -65,6 +69,18 @@ app.delete('/users/:id', (req, res) => {
     // In a real app, you'd delete user "42" from the database.
     res.send(`User ${userId} has been deleted.`);
 });
+
+// 6. PUT /users/:id (req.params + req.body)
+app.put('/users/:id', (req, res) => {
+    const userId = req.params.id;
+    const newData = req.body;
+
+    // In a real app, you'd update user "42" in the database.
+    res.json({
+        message: `User ${userId} has been updated.`,
+        newData: req.body
+    });
+})
 
 
 // --- Start Server ---
