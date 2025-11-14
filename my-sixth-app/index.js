@@ -33,6 +33,9 @@ const upload = multer({ storage: storage });
 // --- Middleware ---
 // Serve our static index.html file
 app.use(express.static('public'));
+
+// Serve files from the 'uploads' folder
+app.use('/uploads', express.static('uploads'));
 // ------------------
 
 // --- Routes ---
@@ -54,10 +57,10 @@ app.post('/upload', upload.single('myFile'), (req, res) => {
     // Send a success response
     res.json({
         message: 'File uploaded successfully!',
-        filename: req.file.filename
+        filename: req.file.filename,
+        path: `/uploads/${req.file.filename}` // This is the new part
     });
 });
-
 // --- Start Server ---
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
