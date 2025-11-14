@@ -1,9 +1,19 @@
+require('dotenv').config(); // This loads the .env file
+const cloudinary = require('cloudinary').v2;
 const express = require('express');
 const multer = require('multer');
 const path = require('path'); // Node's built-in 'path' module
 
 const app = express();
 const port = 3000;
+
+// --- Cloudinary Configuration ---
+// This 'listens' for the .env file
+cloudinary.config({ 
+  cloud_name: process.env.CLOUD_NAME, 
+  api_key: process.env.API_KEY, 
+  api_secret: process.env.API_SECRET 
+});
 
 // --- Multer Configuration ---
 
@@ -66,23 +76,57 @@ app.use('/uploads', express.static('uploads'));
 //     });
 // });
 
-app.post('/upload', upload.single('myFile'), (req, res) => {
+// app.post('/upload', upload.single('myFile'), (req, res) => {
 
-    // The req.file object is now different.
-    // It has a 'buffer' property containing the file's data.
-    console.log('File received in memory:', req.file);
+//     // The req.file object is now different.
+//     // It has a 'buffer' property containing the file's data.
+//     console.log('File received in memory:', req.file);
+
+//     if (!req.file) {
+//         return res.status(400).send('No file was uploaded.');
+//     }
+
+//     // We can't send a path, so we just send a success message
+//     // and show the file's size (in bytes) from the buffer.
+//     res.json({
+//         message: 'File uploaded to memory successfully!',
+//         filename: req.file.originalname, // The original name
+//         size_in_bytes: req.file.buffer.length // The size of the buffer
+//     });
+// });
+
+// Helper function to convert buffer to Data URI
+const bufferToDataURI = (buffer, mimeType) => {
+  let b64 = buffer.toString('base64');
+  return `data:${mimeType};base64,${b64}`;
+};
+
+// We make this an 'async' function to use 'await'
+app.post('/upload', upload.single('myFile'), async (req, res) => {
 
     if (!req.file) {
         return res.status(400).send('No file was uploaded.');
     }
 
-    // We can't send a path, so we just send a success message
-    // and show the file's size (in bytes) from the buffer.
-    res.json({
-        message: 'File uploaded to memory successfully!',
-        filename: req.file.originalname, // The original name
-        size_in_bytes: req.file.buffer.length // The size of the buffer
-    });
+    // 1. Convert the buffer to a Data URI
+    const fileDataURI = bufferToDataURI(req.file.buffer, req.file.mimetype);
+
+    try {
+        // 2. Upload the file to Cloudinary
+        const uploadResult = await cloudinary.uploader.upload(fileDataURI, {
+            folder: "my-project-uploads" // Optional: A folder name in Cloudinary
+        });
+
+        // 3. Send the secure URL back to the client
+        res.json({
+            message: "File uploaded to Cloudinary successfully!",
+            cloudinary_url: uploadResult.secure_url
+        });
+
+    } catch (error) {
+        console.error('Error uploading to Cloudinary:', error);
+        res.status(500).json({ message: "Error uploading file." });
+    }
 });
 // --- Start Server ---
 app.listen(port, () => {
