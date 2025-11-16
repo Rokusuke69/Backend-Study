@@ -1,12 +1,26 @@
 // index.js
 const express = require('express');
 const { check, validationResult } = require('express-validator');
+const rateLimit = require('express-rate-limit');
 const app = express();
 const port = 3000;
 
 // Middleware
 app.use(express.json());
 
+
+// ...
+app.use(express.json());
+
+// --- Rate Limiter Setup ---
+const v1Limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per 'window' (per 15 minutes)
+    message: {
+        error: 'Too many requests from this IP, please try again after 15 minutes'
+    }
+});
+// --------------------------
 // --- API v1 Routes ---
 
 // 1. Create a router for all v1 routes
@@ -55,6 +69,18 @@ const validate = (req, res, next) => {
     next();
 };
 
+const idValidationRule = [
+    check('id').isMongoId().withMessage('Invalid MongoDB ID')
+];
+
+v1Router.get('/users/:id', idValidationRule, validate, (req, res) => {
+    res.status(200).json({
+        message: "ID is valid",
+        id: req.params.id
+    });
+});
+
+
 // --- Create User Route (Protected) ---
 // We add our middlewares in order:
 // 1. The validation rules run
@@ -73,7 +99,7 @@ v1Router.post('/users', userValidationRules, validate, (req, res) => {
 
 // 3. Mount the v1 router in the main app
 // All routes in v1Router will now be prefixed with /api/v1
-app.use('/api/v1', v1Router);
+app.use('/api/v1', v1Limiter, v1Router);
 // ------------------------
 
 // --- Server Start ---
