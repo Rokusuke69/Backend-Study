@@ -12,27 +12,28 @@ const runAggregation = async () => {
 
     const stats = await User.aggregate([
         // Stage 1: $match
-        // Filter: We only want users older than 20
-        {
-            $match: { age: { $gt: 20 } }
-        },
+        { $match: { age: { $gt: 20 } } },
 
         // Stage 2: $group
-        // Group by 'city'.
-        // Calculate 'totalUsers' by adding 1 for each person.
-        // Calculate 'avgAge' by averaging the 'age' field.
-        {
+        { 
             $group: {
-                _id: "$city", // The field we group by
+                _id: "$city",
                 totalUsers: { $sum: 1 },
                 avgAge: { $avg: "$age" }
             }
         },
 
         // Stage 3: $sort
-        // Sort by 'totalUsers' in descending order (-1)
+        { $sort: { totalUsers: -1 } },
+
+        // Stage 4: $project
         {
-            $sort: { totalUsers: -1 }
+            $project: {
+                _id: 0,                // hide _id
+                cityName: "$_id",      // rename _id → cityName
+                totalUsers: 1,         // keep totalUsers
+                averageAge: "$avgAge"  // rename avgAge → averageAge
+            }
         }
     ]);
 
@@ -41,3 +42,4 @@ const runAggregation = async () => {
 };
 
 runAggregation();
+
