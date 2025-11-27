@@ -16,13 +16,13 @@ app.use('/api/v1', homeRoutes);
 
 // Global Error Handler (Required for asyncHandler to work)
 app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({
-        success: false,
-        error: err.message
-    });
+  console.error(err.stack);
+  res.status(500).json({
+    success: false,
+    error: err.message,
+  });
 });
 
 app.listen(port, () => {
-    console.log(`🚀 Production-ready server running on port ${port}`);
+  console.log(`🚀 Production-ready server running on port ${port}`);
 });
